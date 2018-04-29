@@ -38,8 +38,20 @@ testIngredients = np.array(testIngredients)
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D, Flatten, Dropout
 from sklearn.ensemble import BaggingClassifier
+from sklearn.feature_extraction import *
 
+print("trainIngredients.shape[1],", trainIngredients, (trainIngredients.shape[0],))
 #TODO: build neural net, use dense layers, use ensemble learning method: bagging
+neural_net = Sequential()
+neural_net.add(Dense(200, activation='relu', input_shape = (trainIngredients.shape[0],)))
+neural_net.add(Dropout(0.1))
+neural_net.add(Dense(100, activation='relu'))
+neural_net.add(Dense(50, activation='softmax'))
+neural_net.summary()
+
+neural_net.compile(optimizer="Adamax", loss="categorical_crossentropy", metrics=['accuracy'])
+history = neural_net.fit(trainIngredients, trainCuisine, verbose=1, epochs=10)
+
 
 
 """#TODO: build a model"
