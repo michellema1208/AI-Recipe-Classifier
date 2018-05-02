@@ -13,9 +13,8 @@ for i in range(len(trainData)):
     identification = trainData[i]["id"]
     trainID.append(identification)
     ingredients = trainData[i]["ingredients"]
-    #TODO: clean special characters in ingredients
+    #ingredients = " ".join(ingredients)
     trainIngredients.append(ingredients)
-
 
 trainCuisine = np.array(trainCuisine)
 trainID = np.array(trainID)
@@ -30,6 +29,7 @@ for i in range(len(testData)):
     identification = testData[i]["id"]
     testID.append(identification)
     ingredients = testData[i]["ingredients"]
+    #ingredients = " ".join(ingredients)
     testIngredients.append(ingredients)
 
 testID = np.array(testID)
@@ -44,34 +44,62 @@ from sklearn.feature_extraction.text import CountVectorizer
 #TODO: build neural net, use dense layers, use ensemble learning method: bagging
 #countvectorizer
 '''
-vectorizer = CountVectorizer(input = "content")
-boolIngredients = []
-for i in range(len(trainIngredients)):
-    vectorIngredients = vectorizer.fit(trainIngredients[i])
-    boolIngredients.append(vectorIngredients)
-
-boolIngredients = np.array(boolIngredients)
-print("vectorrr", boolIngredients)
+X, y = make_classification(n_samples=1000, n_features=4, n_informative=2, n_redundant=0,
+...                            random_state=0, shuffle=False)
+clf = RandomForestClassifier(max_depth=2, random_state=0)
+clf.fit(X, y)
+RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+            max_depth=2, max_features='auto', max_leaf_nodes=None,
+            min_impurity_decrease=0.0, min_impurity_split=None,
+            min_samples_leaf=1, min_samples_split=2,
+            min_weight_fraction_leaf=0.0, n_estimators=10, n_jobs=1,
+            oob_score=False, random_state=0, verbose=0, warm_start=False)
+print(clf.feature_importances_)
+[ 0.17287856  0.80608704  0.01884792  0.00218648]
+print(clf.predict([[0, 0, 0, 0]]))
 '''
-vectorizer = CountVectorizer(input = "content")
-boolIngredients = []
+'''
+X, y = make_classification(n_samples=boolIngredients.shape[0], n_features=4, n_informative=2, n_redundant=0,
+...                            random_state=0, shuffle=False)
+
+'''
+#####neural network below
+#print("train", trainIngredients)
+#vectorizer = CountVectorizer(input = "content")
+#boolIngredients = vectorizer.fit_transform(trainIngredients)
+
+#print(boolIngredients)
+
+#print("vectorrr", boolIngredients.shape)
+#boolCuisine = vectorizer.fit_transform(trainCuisine)
+allIngredients = []
 for i in range(len(trainIngredients)):
-    vectorIngredients = vectorizer.fit_transform(trainIngredients[i])
-    boolIngredients.append(vectorIngredients)
+    for j in range(len(trainIngredients[i])):
+        if trainIngredients[i][j] not in allIngredients:
+            allIngredients.append(trainIngredients[i][j])
 
-boolIngredients = np.array(boolIngredients)
+boolIngredients = np.zeros((len(trainIngredients), len(allIngredients)))
+for i in range(len(trainIngredients)):
+    recipeIngredients = trainIngredients[i]
+    for j in range(len(allIngredients)):
+        if allIngredients[j] in recipeIngredients:
+            boolIngredients[i][j] = 1
 
-print("vectorrr", boolIngredients.shape)
+vectorizer = CountVectorizer(input = "content")
+boolCuisine = vectorizer.fit_transform(trainCuisine)
+boolCuisine = [x[1] for x in boolCuisine]
+print("cuisine whole", boolCuisine)
+
 
 neural_net = Sequential()
-neural_net.add(Dense(200, activation='relu', input_shape = (boolIngredients.shape[0],)))
+neural_net.add(Dense(100, activation='relu', input_shape = (boolIngredients.shape[1],)))
 neural_net.add(Dropout(0.1))
 neural_net.add(Dense(100, activation='relu'))
-neural_net.add(Dense(50, activation='softmax'))
+neural_net.add(Dense(1, activation='softmax'))
 neural_net.summary()
 
 neural_net.compile(optimizer="Adamax", loss="categorical_crossentropy", metrics=['accuracy'])
-history = neural_net.fit(boolIngredients, trainCuisine, verbose=1, epochs=10)
+history = neural_net.fit(boolIngredients, boolCuisine[1], verbose=1, epochs=10)
 
 
 
