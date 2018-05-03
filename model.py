@@ -92,7 +92,8 @@ for i in range(len(testIngredients)):
         if testIngredients[i][j] not in allTestIngredients:
             allTestIngredients.append(testIngredients[i][j])
 
-#TODO: disregard new test ingredients when making allTestIngredients
+#TODO: disregard new test ingredients when making allTestIngredients, or use
+#original testIngredients
 boolTestIngredients = np.zeros((len(testIngredients), len(allTestIngredients)))
 for i in range(len(testIngredients)):
     recipeIngredients = testIngredients[i]
