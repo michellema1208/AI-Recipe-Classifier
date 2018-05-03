@@ -63,15 +63,7 @@ X, y = make_classification(n_samples=boolIngredients.shape[0], n_features=4, n_i
 ...                            random_state=0, shuffle=False)
 
 '''
-#####neural network below
-#print("train", trainIngredients)
-#vectorizer = CountVectorizer(input = "content")
-#boolIngredients = vectorizer.fit_transform(trainIngredients)
-
-#print(boolIngredients)
-
-#print("vectorrr", boolIngredients.shape)
-#boolCuisine = vectorizer.fit_transform(trainCuisine)
+#### TRAIN ####
 allIngredients = []
 for i in range(len(trainIngredients)):
     for j in range(len(trainIngredients[i])):
@@ -86,20 +78,39 @@ for i in range(len(trainIngredients)):
             boolIngredients[i][j] = 1
 
 vectorizer = CountVectorizer(input = "content")
-boolCuisine = vectorizer.fit_transform(trainCuisine)
-boolCuisine = [x[1] for x in boolCuisine]
-print("cuisine whole", boolCuisine)
+boolCuisine = vectorizer.fit_transform(trainCuisine).toarray()
+#boolCuisine = [x[1] for x in boolCuisine]
+print("cuisine whole bf", boolCuisine)
+boolCuisine = boolCuisine.argmax(1)
+print("cuisine whole af", boolCuisine)
+
+#### TEST ####
+
+allTestIngredients = []
+for i in range(len(testIngredients)):
+    for j in range(len(testIngredients[i])):
+        if testIngredients[i][j] not in allTestIngredients:
+            allTestIngredients.append(testIngredients[i][j])
+
+#TODO: disregard new test ingredients when making allTestIngredients
+boolTestIngredients = np.zeros((len(testIngredients), len(allTestIngredients)))
+for i in range(len(testIngredients)):
+    recipeIngredients = testIngredients[i]
+    for j in range(len(allTestIngredients)):
+        if allTestIngredients[j] in recipeIngredients:
+            boolTestIngredients[i][j] = 1
 
 
 neural_net = Sequential()
 neural_net.add(Dense(100, activation='relu', input_shape = (boolIngredients.shape[1],)))
 neural_net.add(Dropout(0.1))
 neural_net.add(Dense(100, activation='relu'))
-neural_net.add(Dense(1, activation='softmax'))
+neural_net.add(Dense(20, activation='softmax'))
 neural_net.summary()
 
-neural_net.compile(optimizer="Adamax", loss="categorical_crossentropy", metrics=['accuracy'])
-history = neural_net.fit(boolIngredients, boolCuisine[1], verbose=1, epochs=10)
+neural_net.compile(optimizer="Adamax", loss="sparse_categorical_crossentropy", metrics=['accuracy'])
+history = neural_net.fit(boolIngredients, boolCuisine, verbose=1, epochs=10)
+yTest = neural_net.predict(boolTestIngredients)
 
 
 
