@@ -13,7 +13,6 @@ for i in range(len(trainData)):
     identification = trainData[i]["id"]
     trainID.append(identification)
     ingredients = trainData[i]["ingredients"]
-    #ingredients = " ".join(ingredients)
     trainIngredients.append(ingredients)
 
 trainCuisine = np.array(trainCuisine)
@@ -29,7 +28,6 @@ for i in range(len(testData)):
     identification = testData[i]["id"]
     testID.append(identification)
     ingredients = testData[i]["ingredients"]
-    #ingredients = " ".join(ingredients)
     testIngredients.append(ingredients)
 
 testID = np.array(testID)
@@ -40,9 +38,6 @@ from keras.layers import Dense, Conv2D, Flatten, Dropout
 from sklearn.ensemble import BaggingClassifier, RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer
 
-#print("trainIngredients.shape[1],", trainIngredients, (trainIngredients.shape[0],))
-#TODO: build neural net, use dense layers, use ensemble learning method: bagging
-#countvectorizer
 '''
 X, y = make_classification(n_samples=1000, n_features=4, n_informative=2, n_redundant=0,
 ...                            random_state=0, shuffle=False)
@@ -63,6 +58,8 @@ X, y = make_classification(n_samples=boolIngredients.shape[0], n_features=4, n_i
 ...                            random_state=0, shuffle=False)
 
 '''
+
+#build neural net, use dense layers
 #### TRAIN ####
 allIngredients = []
 for i in range(len(trainIngredients)):
@@ -79,28 +76,23 @@ for i in range(len(trainIngredients)):
 
 vectorizer = CountVectorizer(input = "content")
 boolCuisine = vectorizer.fit_transform(trainCuisine).toarray()
-#boolCuisine = [x[1] for x in boolCuisine]
-print("cuisine whole bf", boolCuisine)
 boolCuisine = boolCuisine.argmax(1)
-print("cuisine whole af", boolCuisine)
 
 #### TEST ####
-
+'''
 allTestIngredients = []
 for i in range(len(testIngredients)):
     for j in range(len(testIngredients[i])):
         if testIngredients[i][j] not in allTestIngredients:
             allTestIngredients.append(testIngredients[i][j])
-
-#TODO: disregard new test ingredients when making allTestIngredients, or use
-#original testIngredients
-boolTestIngredients = np.zeros((len(testIngredients), len(allTestIngredients)))
+'''
+#use original testIngredients
+boolTestIngredients = np.zeros((len(testIngredients), len(allIngredients)))
 for i in range(len(testIngredients)):
     recipeIngredients = testIngredients[i]
-    for j in range(len(allTestIngredients)):
-        if allTestIngredients[j] in recipeIngredients:
+    for j in range(len(allIngredients)):
+        if allIngredients[j] in recipeIngredients:
             boolTestIngredients[i][j] = 1
-
 
 neural_net = Sequential()
 neural_net.add(Dense(100, activation='relu', input_shape = (boolIngredients.shape[1],)))
@@ -112,8 +104,31 @@ neural_net.summary()
 neural_net.compile(optimizer="Adamax", loss="sparse_categorical_crossentropy", metrics=['accuracy'])
 history = neural_net.fit(boolIngredients, boolCuisine, verbose=1, epochs=10)
 yTest = neural_net.predict(boolTestIngredients)
+predictLabels = np.argmax(yTest, axis = 1)
+print("NEURALNET##############")
+print(predictLabels)
+for i in range(len(predictLabels)):
+    for j in range(len(boolCuisine)):
+        if boolCuisine[j] == predictLabels[i]:
+            cuisineLabel = trainCuisine[j]
+    print(testID[i], "predicted label", cuisineLabel)
 
 
+#build random forest
+print("43570")
+forest = RandomForestClassifier(n_estimators=500, max_features='auto', class_weight='balanced')
+print("hi")
+forest.fit(boolIngredients, boolCuisine)
+print("hi")
+yTest = forest.predict(boolTestIngredients)
+#predictLabels = np.argmax(yTest, axis = 1)
+print("RANDOMFOREST##############")
+print(yTest)
+for i in range(len(predictLabels)):
+    for j in range(len(boolCuisine)):
+        if boolCuisine[j] == predictLabels[i]:
+            cuisineLabel = trainCuisine[j]
+    print(testID[i], "predicted label", predictLabels[i])
 
 """#TODO: build a model"
 neural_net = Sequential()
