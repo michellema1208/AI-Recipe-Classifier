@@ -1,9 +1,9 @@
 \documentclass[11pt]{article}
 \usepackage{fullpage}
-\usepackage{graphicx}
+\usepackage{graphicx, url}
 
-\title{CS63 Spring 2018\\Your project title}
-\author{Your names}
+\title{CS63 Spring 2018\\Recipe Ingredients}
+\author{Michelle Ma and Haochen Wang}
 \date{}
 
 \begin{document}
@@ -12,31 +12,135 @@
 
 \section{Introduction}
 
-Your paper should be 4-6 pages long.  In this section you should give
-a broad introduction to your project.  Assume that you are writing to
-an audience that is familiar with AI, but may not know the details of
-the particular technique that you are using.  You should give an
-overview of the approach being explored, and how you applied it to a
-particular problem.
+For our final project in CS63: Artificial Intelligence, we decided to participate
+in a Kaggle machine learning contest to solve a supervised learning problem. The
+specific machine learning contest we entered was focused on using recipe ingredients
+to categorize the cuisine. \\
+
+To accomplish this task, we decided to try using a neural network as well as
+an ensemble learning method. In deciding to use neural networks, we took into
+account their capability of modeling and processing nonlinear relationships between
+inputs and outputs in parallel.
+(\url{https://www.kdnuggets.com/2016/10/artificial-intelligence-deep-learning-neural-networks-explained.html})
+Ability to operate on non-linear datasets without placing restrictions on input variables
+is an important strength of neural networks
+given the many real-life, non-linear relationships between inputs and outputs. Moreover,
+neural networks are particularly good at generalizing data. After learning from
+the initial inputs and their relationships, it can infer unseen relationships on
+unseen data as well, thus making the model generalize and predict on unseen data.
+(\url{https://towardsdatascience.com/introduction-to-neural-networks-advantages-and-applications-96851bd1a207})
+Given that our dataset is non-linear and given the aforementioned strengths of
+neural networks, we felt like using a neural network would be a good fit.\\
+
+In addition to neural networks, we also tried the Random Forest ensemble
+learning method. In general, ensemble learning works by combining the output
+of many weak classifiers to make a strong classifier that outperforms all of
+its component parts. The two most common methods for ensemble learning are
+boosting and bagging. The key idea of boosting is to change the algorithm
+by restricting its complexity and/or randomizing. The key idea of bagging (bootstrap
+aggregating) is to change the data set by sampling with replacement. Overall,
+bagging fits complex models to resamples of the dataset, where each model will
+over-fit to its sample, and bagging takes lots of samples and votes across them
+to reduce the overall variance. Boosting fits simple models to the entire
+dataset, where each model will be under-fit to the data set, and as long as
+the biases are uncorrelated, voting reduces the overall bias. \\
+
+The Random Forest algorithm uses bagging to overcome several problems with decision
+trees, such as reduction in overfitting by averaging over several trees as well
+as reduction in variance, by training on re-samples of the data. Furthermore,
+the randomness of the Random Forest Algorithm is seen in the training phase by taking a random subset
+of all available features, and identifying the best split feature over a finite set
+of iterations. Overall, the Random Forest algorithm is an excellent classification
+algorithm because it classifies large datasets with accuracy.
+Thus, we felt like using Random Forest over a single decision tree would be
+the best ensemble learning method to accomplish the task of building a
+recipe classifier. \\
 
 \section{Method and Details}
 
-In this section you should explain how you implemented your project.
+Our specific Kaggle competition provided a train.json, which is the training
+set containing recipes id, type of cuisine, and list of ingredients. It also
+provided a test.json, which is the test set containing recipes id, and list of
+ingredients. The cuisine type is removed, as it is the target variable we
+are trying to predict. \\
 
-If your project is based on a Kaggle competition, this should include
-describing the data set used (number of patterns, number of features,
-description of features, any preprocessing that was necessary) and its
-source.
-If your project is constructing a hex player, this should include what
-supervised and reinforcement learning techniques you used, and how you
-generated the input data.
+We first parsed the train.json file to obtain an array of ingredients and an
+array of cuisines. Since Kaggle intentionally does not provide labels for their test set (i.e. they
+do not provide a "yTest"), as they use the labels for the test set to gauge
+accuracy of the models submitted to the contest, we split the array of ingredients and cuisines,
+reserving 80% of the array of ingredients and cuisines as our training data (i.e. trainIngredients, trainCuisine) and leaving the
+remaining 20% to serve as our test set (i.e. testIngredients, testCuisine). Since we are given the correct labels for the training
+set, this way we are able to gauge the accuracy of our model by checking how our model outputs
+compare to the given labels. \\
+
+To visualize our dataset for trainIngredients and testIngredients, we wanted to create a boolean matrix where rows indicate
+a dish and columns represent the presence of an ingredient in that dish, out of
+a set of all possible ingredients across all dishes. To visualize our dataset
+for trainCuisine and testCuisine, we wanted a vector of numbers which indicated
+the category of cuisine that each dish belonged to. \\
+
+To accomplish this, we used the scikit-learn package, specifically the fit\_transform
+method on a CountVectorizer object. The fit\_transform method first "fits" the
+feature extractor itself to determine what features will base future transformations.
+Then, the method "transforms" the data by tokenizing the strings and producing
+count vectors for the data. At first
+we attempted to used this idea on trainIngredients and testIngredients but found
+out that CountVectorizer objects didn't work on duplicate vocabularies, which
+didn't work well for recipes with ingredients that had duplicate vocabularies (i.e. if a
+recipe had purple onion and green onion, the classifier would have a difficult time
+realizing that two different types of onions appeared in the recipe). Therefore,
+we had to manually create the boolean matrix for trainIngredients and testIngredients.
+Since cuisines usually do not involve duplicate vocabularies, we were able
+to avoid the aforementioned problem and apply CountVectorizer objects to transform
+trainCuisine and testCuisine into boolean matrices. After this transformation, we
+applied the NumPy operation "argmax" with a parameter of 1 to grab the column
+which has a 1 in its bucket, which indicates the cuisine type. \\
+
+%TODO: ask Bryce what he means by patters and features in "If your project
+%is based on a Kaggle competition, this should include
+%describing the data set used (number of patterns, number of features,
+%description of features, any preprocessing that was necessary) and its
+%source.
+
+For our model, we tried neural network as well as the Random Forest ensemble learning
+method. For our neural network, we added two hidden dense layers, with a
+dropout layer of dropout probability = 0.1 between the first and second hidden
+layers. For our first and second hidden layers, we had 100 nodes, using the ReLU
+activation function. The reason why we added a hidden layer of 100 nodes
+is because more nodes makes the network more powerful, as even if
+each node in the layer is computing a simple function, the aggregate computation
+of the entire layer of 100 nodes can result in the completion of a more
+complex function. Moreover, the reason why we chose ReLU as the activation function is because
+ReLU has a constant derivative. Thus, when we do backpropagation, the contribution
+to the change in the cost for each weight is more significant because
+we no longer encounter the Vanishing Gradient problem which occurs when using the
+sigmoid function. Our output layer consists of 20 nodes and uses the softmax
+activation function. The reason why we use 20 nodes is because there are 20
+possible cuisines each dish can be categorized as. The reason why we chose softmax as an activation function for our layer of
+output nodes is because "the output of the softmax function can be used to
+represent a categorical distribution – that is, a probability distribution
+over K different possible outcomes." (\url{https://en.wikipedia.org/wiki/Softmax_function/}).
+Since our output is one of 10 numbers, softmax suits this classification problem
+well, which is why it increases our neural network's prediction accuracy. \\
+
+Moreover, the reason why we chose Adamax for our optimizer was because Adamax has the benefit of RMSProp,
+an algorithm that does well on online and for noisy problems, and also makes
+use of second moments of gradients. It is also more appropriate for problems
+that are large in terms of data and with sparse gradients, which describe our
+dataset well (\url{https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/}).
+
+%TODO: write more about sparse_categorical_crossentropy
+
+Furthermore, we used boolTestIngredients and boolTestCuisine as our validation data
+to check the accuracy of our model. 
+
 In either case, you should provide all of the parameter settings used (such
 as learning rate, etc.).  You should also provide details about how
 the system was trained, and how you determined when to end training.
 
-Details about how to test and run your code should not be given in the
-paper, but should instead be described in the README file in the lab
-directory. 
+%TODO: the README -- Details about how to test and run your code should not be given in the
+%paper, but should instead be described in the README file in the lab
+%directory.
 
 \section{Results}
 
@@ -50,10 +154,10 @@ reader to it.
 Even if your project is not as successful as you'd hoped, you still
 need to show results.  This section is one of the key parts of any
 scientific paper.  Be sure to provide adequate information so that the
-reader can evaluate the outcomes of your experiments. 
+reader can evaluate the outcomes of your experiments.
 
 \section{Conclusions}
 
-This section should sum up what you did and what you found. 
+This section should sum up what you did and what you found.
 
 \end{document}
