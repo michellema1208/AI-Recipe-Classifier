@@ -17,7 +17,7 @@ in a Kaggle machine learning contest to solve a supervised learning problem. The
 specific machine learning contest we entered was focused on using recipe ingredients
 to categorize the cuisine. \\
 
-To accomplish this task, we decided to try using a neural network as well as
+To accomplish this task, we used a neural network as well as
 an ensemble learning method. In deciding to use neural networks, we took into
 account their capability of modeling and processing nonlinear relationships between
 inputs and outputs in parallel.
@@ -26,11 +26,11 @@ Ability to operate on non-linear datasets without placing restrictions on input 
 is an important strength of neural networks
 given the many real-life, non-linear relationships between inputs and outputs. Moreover,
 neural networks are particularly good at generalizing data. After learning from
-the initial inputs and their relationships, it can infer unseen relationships on
+the initial inputs and their relationships, it can infer relationships on
 unseen data as well, thus making the model generalize and predict on unseen data.
 (\url{https://towardsdatascience.com/introduction-to-neural-networks-advantages-and-applications-96851bd1a207})
 Given that our dataset is non-linear and given the aforementioned strengths of
-neural networks, we felt like using a neural network would be a good fit.\\
+neural networks, we thought using a neural network would be a good fit.\\
 
 In addition to neural networks, we also tried the Random Forest ensemble
 learning method. In general, ensemble learning works by combining the output
@@ -62,22 +62,37 @@ Our specific Kaggle competition provided a train.json, which is the training
 set containing recipes id, type of cuisine, and list of ingredients. It also
 provided a test.json, which is the test set containing recipes id, and list of
 ingredients. The cuisine type is removed, as it is the target variable we
-are trying to predict. \\
+are trying to predict. Thus, we only used the train.json file, because we can then
+use the correct dish label provided to check the accuracy rates of our models. \\
 
 We first parsed the train.json file to obtain an array of ingredients and an
-array of cuisines. Since Kaggle intentionally does not provide labels for their test set (i.e. they
-do not provide a "yTest"), as they use the labels for the test set to gauge
+array of cuisines. Since Kaggle intentionally does not provide labels for their test
+set, as they use the labels for the test set to gauge
 accuracy of the models submitted to the contest, we split the array of ingredients and cuisines,
 reserving 80% of the array of ingredients and cuisines as our training data (i.e. trainIngredients, trainCuisine) and leaving the
 remaining 20% to serve as our test set (i.e. testIngredients, testCuisine). Since we are given the correct labels for the training
 set, this way we are able to gauge the accuracy of our model by checking how our model outputs
 compare to the given labels. \\
 
-To visualize our dataset for trainIngredients and testIngredients, we wanted to create a boolean matrix where rows indicate
+In terms of how much data we were given, the train.json file initially had approximately
+38,183 dishes, so after we did the 80-20 split as explained above, the training set
+has 31,819 dishes to predict and the testing set has 6,364 dishes to predict. To
+visualize our dataset for trainIngredients and testIngredients, we wanted to create a boolean matrix where rows indicate
 a dish and columns represent the presence of an ingredient in that dish, out of
-a set of all possible ingredients across all dishes. To visualize our dataset
+a set of all possible ingredients across all dishes. The total number of unique
+ingredients across all dishes was 6,311. Thus, this means that
+trainIngredients has dimensions 31,819 (number of dishes to predict) x 6,311 (total
+number of unique ingredients across all dishes) and testIngredients has dimensions
+6,364 (number of dishes to predict) x 6,311 (total
+number of unique ingredients across all dishes). To visualize our dataset
 for trainCuisine and testCuisine, we wanted a vector of numbers which indicated
-the category of cuisine that each dish belonged to. \\
+the category of cuisine that each dish belonged to. When we printed out the shape
+of trainCuisine and testCuisine, we found that their shapes were (31819, 20)
+and (6364, 20) respectively, which indicates to us that there are 20 unique cuisines
+across all possible dishes. Therefore, trainCuisine has dimensions 31,819
+(number of dishes to predict) x 20 (total number of unique cuisines across all dishes)
+and testCuisine has dimensions 6364
+(number of dishes to predict) x 20 (total number of unique cuisines across all dishes). \\
 
 To accomplish this, we used the scikit-learn package, specifically the fit\_transform
 method on a CountVectorizer object. The fit\_transform method first "fits" the
@@ -95,12 +110,6 @@ to avoid the aforementioned problem and apply CountVectorizer objects to transfo
 trainCuisine and testCuisine into boolean matrices. After this transformation, we
 applied the NumPy operation "argmax" with a parameter of 1 to grab the column
 which has a 1 in its bucket, which indicates the cuisine type. \\
-
-%TODO: ask Bryce what he means by patters and features in "If your project
-%is based on a Kaggle competition, this should include
-%describing the data set used (number of patterns, number of features,
-%description of features, any preprocessing that was necessary) and its
-%source.
 
 For our model, we tried neural network as well as the Random Forest ensemble learning
 method. For our neural network, we added two hidden dense layers, with a
@@ -127,22 +136,54 @@ Moreover, the reason why we chose Adamax for our optimizer was because Adamax ha
 an algorithm that does well on online and for noisy problems, and also makes
 use of second moments of gradients. It is also more appropriate for problems
 that are large in terms of data and with sparse gradients, which describe our
-dataset well (\url{https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/}).
+dataset well (\url{https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/}). \\
 
-%TODO: write more about sparse_categorical_crossentropy
+%TODO #1: write more about sparse_categorical_crossentropy
 
-Furthermore, we used boolTestIngredients and boolTestCuisine as our validation data
-to check the accuracy of our model. 
-
-In either case, you should provide all of the parameter settings used (such
-as learning rate, etc.).  You should also provide details about how
-the system was trained, and how you determined when to end training.
-
-%TODO: the README -- Details about how to test and run your code should not be given in the
+%TODO #2: the README -- Details about how to test and run your code should not be given in the
 %paper, but should instead be described in the README file in the lab
 %directory.
 
+In terms of training our system, we first fit the neural net using boolTrainIngredients
+(our transformed training input, as outlined above) and boolTrainCuisine (our
+transformed training output) and validated our model with boolTestIngredients and boolTestCuisine
+to check the accuracy of our model. We did this for 10 epochs, as we noticed that
+the accuracy rate stagnated at that point. \\
+
+%TODO #3: check if 10 epochs explanation makes sense; further how we knew when to end training
+
+We also tried using the Random Forest ensemble learning method for our model,
+in which we imported the RandomForestClassifier from the sklearn.ensemble package.
+We gave our RandomForestClassifier 500 n\_estimators, which is the number of trees
+that are built before taking the maximum voting or averages of predictions. Having
+500 n\_estimators was advantageous because higher number of trees generally yields
+better performance and makes predictions stronger and more stable, but it wasn't
+too high that our processor could not handle it. Additionally, we gave our
+RandomForestClassifier max\_features of "auto" which will simply take all the
+features which make sense in every tree, without placing an restrictions on
+the individual tree. (\url{https://www.analyticsvidhya.com/blog/2015/06/tuning-random-forest-model/}).
+Lastly, we gave our RandomForestClassifier a class\_weight of "balanced", wherein
+classes are automatically weighted inversely proportional to how frequently they
+appear in the data (\url{https://chrisalbon.com/machine_learning/trees_and_forests/handle_imbalanced_classes_in_random_forests/});
+this is particularly useful when dealing with imbalanced classes in Random Forest,
+which was characteristic of our data.
+
 \section{Results}
+
+For our neural net, when we run the test sets (boolTestIngredients, boolTestCuisine)
+on our model, we get an accuracy rate of ~93%. Although somewhat high, we
+concluded that a 93% accuracy rate ultimately made sense, because a lot of our
+model's inaccurate classifications were minor. For example, we noticed that
+our model classified a Vietnamese dish as Thai, but upon looking at the ingredients
+of the dish, we noticed that the Vietnamese dish did share a lot of the same
+ingredients as other Thai dishes, such as fish sauce, rice noodles, and cilantro
+leaves. Overall, because our inputs are ingredients and each country's cuisine usually
+has a few distinct ingredients that are neural network can capitalize on,
+it makes sense that our neural network has a relatively high accuracy rate. \\
+
+For our random forest ensemble model, we scored a higher accuracy rate of ~99%.
+This was surprisingly high, but since we have an ensemble that is able to aggregate
+the strength of many smaller trees and pick out
 
 In this section you should show and analyze the results.  Measure the
 performance of your system, and if possible compare your performance
