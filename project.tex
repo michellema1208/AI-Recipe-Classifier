@@ -70,9 +70,9 @@ train.json file, because we can then use the known dish label provided to check
 the accuracy rates of our models. \\
 
 We first parsed the train.json file to obtain an array of all ingredients and an
-array of all cuisines. Then, we split these two arrays, reserving 80% of the array
-of ingredients and cuisines as our training data (trainIngredients, trainCuisine) and
-leaving the remaining 20% to serve as our test set (testIngredients, testCuisine).
+array of all cuisines. Then, we split these two arrays, reserving 80\% of the array
+of ingredients and cuisines as our training set (trainIngredients, trainCuisine) and
+leaving the remaining 20\% to serve as our test set (testIngredients, testCuisine).
 Since we are given the correct labels for the training set, this way we are able
 to gauge the accuracy of our model by checking how our model outputs
 compare to the given labels. \\
@@ -94,7 +94,7 @@ of trainCuisine and testCuisine, we found that their shapes were (31819, 20)
 and (6364, 20) respectively, which indicates to us that there are 20 unique cuisines
 across all possible dishes. Therefore, trainCuisine has dimensions 31,819
 (number of dishes to train) x 20 (total number of unique cuisines across all dishes)
-and testCuisine has dimensions 6364
+and testCuisine has dimensions 6,364
 (number of dishes to predict) x 20 (total number of unique cuisines across all dishes). \\
 
 To accomplish this, we used the scikit-learn package, specifically the fit\_transform
@@ -129,9 +129,9 @@ we no longer encounter the Vanishing Gradient problem which occurs when using th
 sigmoid function. Our output layer consists of 20 nodes and uses the softmax
 activation function. The reason why we use 20 nodes is because there are 20
 possible cuisines each dish can be categorized as. The reason why we chose softmax as an activation function for our layer of
-output nodes is because "the output of the softmax function can be used to
-represent a categorical distribution – that is, a probability distribution
-over K different possible outcomes." (\url{https://en.wikipedia.org/wiki/Softmax_function/}).
+output nodes is because the output of the softmax function can be used to
+represent a categorical distribution - that is, a probability distribution
+over K different possible outcomes. (\url{https://en.wikipedia.org/wiki/Softmax_function/})
 Since our output is one of 20 numbers, softmax suits this classification problem
 well, which is why it increases our neural network's prediction accuracy. \\
 
@@ -139,7 +139,7 @@ Moreover, we chose Adamax for our optimizer because Adamax has the benefit of RM
 an algorithm that does well on online and noisy problems, and also makes
 use of second moments of gradients. It is also more appropriate for problems
 that are large in terms of data and with sparse gradients, which describe our
-dataset well (\url{https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/}). \\
+dataset well. (\url{https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/}) \\
 
 %TODO #1: write more about sparse_categorical_crossentropy
 
@@ -164,7 +164,7 @@ better performance and makes predictions stronger and more stable, but it wasn't
 too high that our processor could not handle it. Additionally, we gave our
 RandomForestClassifier max\_features of "auto" which will simply take all the
 features which make sense in every tree, without placing an restrictions on
-the individual tree. (\url{https://www.analyticsvidhya.com/blog/2015/06/tuning-random-forest-model/}).
+the individual tree. (\url{https://www.analyticsvidhya.com/blog/2015/06/tuning-random-forest-model/})
 Lastly, we gave our RandomForestClassifier a class\_weight of "balanced", wherein
 classes are automatically weighted inversely proportional to how frequently they
 appear in the data (\url{https://chrisalbon.com/machine_learning/trees_and_forests/handle_imbalanced_classes_in_random_forests/});
@@ -174,8 +174,8 @@ which was characteristic of our data.
 \section{Results}
 
 For our neural net, when we run the test sets (boolTestIngredients, boolTestCuisine)
-on our model, we get an accuracy rate of ~93%. Although somewhat high, we
-concluded that a 93% accuracy rate ultimately made sense, because a lot of our
+on our model, we get an accuracy rate of ~93\%. Although somewhat high, we
+concluded that a 93\% accuracy rate ultimately made sense, because a lot of our
 model's inaccurate classifications were minor. For example, we noticed that
 our model classified a Vietnamese dish as Thai, but upon looking at the ingredients
 of the dish, we noticed that the Vietnamese dish did share a lot of the same
@@ -184,11 +184,11 @@ leaves. Overall, because our inputs are ingredients and each country's cuisine u
 has a few distinct ingredients that our neural network can capitalize on,
 it makes sense that our neural network has a relatively high accuracy rate. \\
 
-For our random forest ensemble model, we scored a higher accuracy rate of ~99%.
+For our random forest ensemble model, we scored a higher accuracy rate of ~99\%.
 This was very high, but since we have an ensemble that is able to aggregate
 the strength of many smaller trees with a large n\_estimators of 500, and select
 features well with the specified parameters, this result is also not too surprising.
-We also have a large training set of ~30,000 dishes, and 
+We also have a large training set of ~30,000 dishes, and
 
 In this section you should show and analyze the results.  Measure the
 performance of your system, and if possible compare your performance
