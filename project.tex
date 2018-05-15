@@ -32,56 +32,59 @@ unseen data as well, thus making the model generalize and predict on unseen data
 Given that our dataset is non-linear and given the aforementioned strengths of
 neural networks, we thought using a neural network would be a good fit.\\
 
-In addition to neural networks, we also tried the Random Forest ensemble
+In addition to neural networks, we also used the Random Forest ensemble
 learning method. In general, ensemble learning works by combining the output
 of many weak classifiers to make a strong classifier that outperforms all of
 its component parts. The two most common methods for ensemble learning are
 boosting and bagging. The key idea of boosting is to change the algorithm
 by restricting its complexity and/or randomizing. The key idea of bagging (bootstrap
 aggregating) is to change the data set by sampling with replacement. Overall,
-bagging fits complex models to resamples of the dataset, where each model will
-over-fit to its sample, and bagging takes lots of samples and votes across them
-to reduce the overall variance. Boosting fits simple models to the entire
+boosting fits simple models to the entire
 dataset, where each model will be under-fit to the data set, and as long as
-the biases are uncorrelated, voting reduces the overall bias. \\
+the biases are uncorrelated, voting reduces the overall bias. Bagging
+fits complex models to resamples of the dataset, where each model will
+over-fit to its sample, and bagging takes lots of samples and votes across them
+to reduce the overall variance.  \\
 
-The Random Forest algorithm uses bagging to overcome several problems with decision
-trees, such as reduction in overfitting by averaging over several trees as well
-as reduction in variance, by training on re-samples of the data. Furthermore,
+The Random Forest algorithm uses bagging to overcome several problems with simpler models
+like the decision trees, such as reduction in overfitting by averaging over several trees, as well
+as reduction in variance by training on re-samples of the data. Furthermore,
 the randomness of the Random Forest Algorithm is seen in the training phase by taking a random subset
 of all available features, and identifying the best split feature over a finite set
 of iterations. Overall, the Random Forest algorithm is an excellent classification
 algorithm because it classifies large datasets with accuracy.
-Thus, we felt like using Random Forest over a single decision tree would be
+Thus, we felt that using a Random Forest over a single decision tree would be
 the best ensemble learning method to accomplish the task of building a
 recipe classifier. \\
 
 \section{Method and Details}
 
-Our specific Kaggle competition provided a train.json, which is the training
+Our specific Kaggle competition provided a train.json file, which is the training
 set containing recipes id, type of cuisine, and list of ingredients. It also
-provided a test.json, which is the test set containing recipes id, and list of
-ingredients. The cuisine type is removed, as it is the target variable we
-are trying to predict. Thus, we only used the train.json file, because we can then
-use the correct dish label provided to check the accuracy rates of our models. \\
+provided a test.json file, which is the test set containing recipe id and list of
+ingredients. Kaggle intentionally does not provide the cuisine type, or labels, for
+their test set, as it is the target variable that participants are trying to predict.
+Additionally, the held-out correct labels for the test set will be used to gauge
+the accuracy of the models submitted to the contest. Thus, we only used the
+train.json file, because we can then use the known dish label provided to check
+the accuracy rates of our models. \\
 
-We first parsed the train.json file to obtain an array of ingredients and an
-array of cuisines. Since Kaggle intentionally does not provide labels for their test
-set, as they use the labels for the test set to gauge
-accuracy of the models submitted to the contest, we split the array of ingredients and cuisines,
-reserving 80% of the array of ingredients and cuisines as our training data (i.e. trainIngredients, trainCuisine) and leaving the
-remaining 20% to serve as our test set (i.e. testIngredients, testCuisine). Since we are given the correct labels for the training
-set, this way we are able to gauge the accuracy of our model by checking how our model outputs
+We first parsed the train.json file to obtain an array of all ingredients and an
+array of all cuisines. Then, we split these two arrays, reserving 80% of the array
+of ingredients and cuisines as our training data (trainIngredients, trainCuisine) and
+leaving the remaining 20% to serve as our test set (testIngredients, testCuisine).
+Since we are given the correct labels for the training set, this way we are able
+to gauge the accuracy of our model by checking how our model outputs
 compare to the given labels. \\
 
-In terms of how much data we were given, the train.json file initially had approximately
+In terms of how much data we were given, the train.json file initially had
 38,183 dishes, so after we did the 80-20 split as explained above, the training set
-has 31,819 dishes to predict and the testing set has 6,364 dishes to predict. To
+has 31,819 dishes for model fitting and the testing set has 6,364 dishes for prediction. To
 visualize our dataset for trainIngredients and testIngredients, we wanted to create a boolean matrix where rows indicate
 a dish and columns represent the presence of an ingredient in that dish, out of
 a set of all possible ingredients across all dishes. The total number of unique
 ingredients across all dishes was 6,311. Thus, this means that
-trainIngredients has dimensions 31,819 (number of dishes to predict) x 6,311 (total
+trainIngredients has dimensions 31,819 (number of dishes to train) x 6,311 (total
 number of unique ingredients across all dishes) and testIngredients has dimensions
 6,364 (number of dishes to predict) x 6,311 (total
 number of unique ingredients across all dishes). To visualize our dataset
@@ -90,22 +93,22 @@ the category of cuisine that each dish belonged to. When we printed out the shap
 of trainCuisine and testCuisine, we found that their shapes were (31819, 20)
 and (6364, 20) respectively, which indicates to us that there are 20 unique cuisines
 across all possible dishes. Therefore, trainCuisine has dimensions 31,819
-(number of dishes to predict) x 20 (total number of unique cuisines across all dishes)
+(number of dishes to train) x 20 (total number of unique cuisines across all dishes)
 and testCuisine has dimensions 6364
 (number of dishes to predict) x 20 (total number of unique cuisines across all dishes). \\
 
 To accomplish this, we used the scikit-learn package, specifically the fit\_transform
 method on a CountVectorizer object. The fit\_transform method first "fits" the
-feature extractor itself to determine what features will base future transformations.
+feature extractor itself to determine what features to base future transformations.
 Then, the method "transforms" the data by tokenizing the strings and producing
 count vectors for the data. At first
 we attempted to used this idea on trainIngredients and testIngredients but found
 out that CountVectorizer objects didn't work on duplicate vocabularies, which
-didn't work well for recipes with ingredients that had duplicate vocabularies (i.e. if a
+didn't work well for recipes with ingredients that had multiple same terms (i.e. if a
 recipe had purple onion and green onion, the classifier would have a difficult time
 realizing that two different types of onions appeared in the recipe). Therefore,
 we had to manually create the boolean matrix for trainIngredients and testIngredients.
-Since cuisines usually do not involve duplicate vocabularies, we were able
+Since cuisines only refer to one type, we were able
 to avoid the aforementioned problem and apply CountVectorizer objects to transform
 trainCuisine and testCuisine into boolean matrices. After this transformation, we
 applied the NumPy operation "argmax" with a parameter of 1 to grab the column
@@ -129,11 +132,11 @@ possible cuisines each dish can be categorized as. The reason why we chose softm
 output nodes is because "the output of the softmax function can be used to
 represent a categorical distribution – that is, a probability distribution
 over K different possible outcomes." (\url{https://en.wikipedia.org/wiki/Softmax_function/}).
-Since our output is one of 10 numbers, softmax suits this classification problem
+Since our output is one of 20 numbers, softmax suits this classification problem
 well, which is why it increases our neural network's prediction accuracy. \\
 
-Moreover, the reason why we chose Adamax for our optimizer was because Adamax has the benefit of RMSProp,
-an algorithm that does well on online and for noisy problems, and also makes
+Moreover, we chose Adamax for our optimizer because Adamax has the benefit of RMSProp,
+an algorithm that does well on online and noisy problems, and also makes
 use of second moments of gradients. It is also more appropriate for problems
 that are large in terms of data and with sparse gradients, which describe our
 dataset well (\url{https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/}). \\
@@ -178,12 +181,14 @@ our model classified a Vietnamese dish as Thai, but upon looking at the ingredie
 of the dish, we noticed that the Vietnamese dish did share a lot of the same
 ingredients as other Thai dishes, such as fish sauce, rice noodles, and cilantro
 leaves. Overall, because our inputs are ingredients and each country's cuisine usually
-has a few distinct ingredients that are neural network can capitalize on,
+has a few distinct ingredients that our neural network can capitalize on,
 it makes sense that our neural network has a relatively high accuracy rate. \\
 
 For our random forest ensemble model, we scored a higher accuracy rate of ~99%.
-This was surprisingly high, but since we have an ensemble that is able to aggregate
-the strength of many smaller trees and pick out
+This was very high, but since we have an ensemble that is able to aggregate
+the strength of many smaller trees with a large n\_estimators of 500, and select
+features well with the specified parameters, this result is also not too surprising.
+We also have a large training set of ~30,000 dishes, and 
 
 In this section you should show and analyze the results.  Measure the
 performance of your system, and if possible compare your performance

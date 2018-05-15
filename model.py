@@ -20,14 +20,17 @@ for i in range(len(trainIngredients)):
 
 vectorizer = CountVectorizer(input = "content")
 boolTrainCuisine = vectorizer.fit_transform(trainCuisine).toarray()
+print("length of boolTrainCuisine", boolTrainCuisine.shape)
 boolTrainCuisine = boolTrainCuisine.argmax(1)
 
 #### TEST ####
 test = np.load("test.npz")
 boolTestIngredients = test["boolTestIngredients"]
 boolTestCuisine = test["boolTestCuisine"]
+print("length of test ingredients", len(boolTestIngredients))
+print("length of train ingredients", len(boolTrainIngredients))
+print("length of all ingredients", len(allIngredients))
 
-""""
 #### NEURALNET ####
 neural_net = Sequential()
 neural_net.add(Dense(100, activation='relu', input_shape = (boolTrainIngredients.shape[1],)))
@@ -48,7 +51,7 @@ for i in range(len(predictLabels)):
     print(i, "predicted label:", cuisineLabel)
 loss, accuracy = neural_net.evaluate(boolTestIngredients, boolTestCuisine, verbose=0)
 print("NN accuracy: {}%".format(accuracy*100))
-"""
+
 
 #### RANDOMFOREST ####
 forest = RandomForestClassifier(n_estimators=500, max_features='auto', class_weight='balanced')
@@ -63,7 +66,7 @@ for i in range(len(yTest)):
         if boolTrainCuisine[j] == yTest[i]:
             cuisineLabel = trainCuisine[j]
     print(i, "predicted label", cuisineLabel)
-accuracy = forest.score(boolTestIngredients, boolTestCuisine) 
+accuracy = forest.score(boolTestIngredients, boolTestCuisine)
 print("RF accuracy: {}%".format(accuracy*100))
 
 
