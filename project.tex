@@ -1,10 +1,10 @@
 \documentclass[11pt]{article}
 \usepackage{fullpage}
-\usepackage{graphicx, url}
+\usepackage{graphicx, url, multirow}
 
 \title{CS63 Spring 2018\\Recipe Ingredients}
 \author{Michelle Ma and Haochen Wang}
-\date{}
+\date{5/15/18}
 
 \begin{document}
 
@@ -114,7 +114,7 @@ trainCuisine and testCuisine into boolean matrices. After this transformation, w
 applied the NumPy operation "argmax" with a parameter of 1 to grab the column
 which has a 1 in its bucket, which indicates the cuisine type. \\
 
-For our model, we tried neural network as well as the Random Forest ensemble learning
+For our model, we tried a neural network as well as the Random Forest ensemble learning
 method. For our neural network, we added two hidden dense layers, with a
 dropout layer of dropout probability = 0.1 between the first and second hidden
 layers. For our first and second hidden layers, we had 100 nodes, using the ReLU
@@ -141,19 +141,24 @@ use of second moments of gradients. It is also more appropriate for problems
 that are large in terms of data and with sparse gradients, which describe our
 dataset well. (\url{https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/}) \\
 
-%TODO #1: write more about sparse_categorical_crossentropy
-
-%TODO #2: the README -- Details about how to test and run your code should not be given in the
-%paper, but should instead be described in the README file in the lab
-%directory.
+Furthermore, we chose sparse\_categorical\_crossentropy as our loss function
+based on three main factors: number of outcomes, the type of output, and the
+type of target. We have more than 20 outcomes, so we were looking for a loss
+function that produced more than 2 outcomes, i.e. more than binary categorical
+crossentropy could offer, for example. We were also looking to work with
+probabilistic output, as the "fit\_transform" method we called on trainCuisine
+(i.e. our yTrain dataset) produces a matrix of probabilities. Lastly, we were
+looking for "hard" targets, as we wanted a definite cuisine label as opposed to
+a "soft" target, which would have given probability statements about how likely
+a dish was to be a certain cuisine label. Thus, because sparse\_categorical\_crossentropy
+as a loss function accomplished these three main factors, we concluded that
+it would be the best fit loss function for our neural network. \\
 
 In terms of training our system, we first fit the neural net using boolTrainIngredients
 (our transformed training input, as outlined above) and boolTrainCuisine (our
 transformed training output) and validated our model with boolTestIngredients and boolTestCuisine
 to check the accuracy of our model. We did this for 10 epochs, as we noticed that
 the accuracy rate stagnated at that point. \\
-
-%TODO #3: check if 10 epochs explanation makes sense; further how we knew when to end training
 
 We also tried using the Random Forest ensemble learning method for our model,
 in which we imported the RandomForestClassifier from the sklearn.ensemble package.
@@ -162,19 +167,27 @@ that are built before taking the maximum voting or averages of predictions. Havi
 500 n\_estimators was advantageous because higher number of trees generally yields
 better performance and makes predictions stronger and more stable, but it wasn't
 too high that our processor could not handle it. Additionally, we gave our
-RandomForestClassifier max\_features of "auto" which will simply take all the
+RandomForestClassifier max\_features of "auto", which will simply take all the
 features which make sense in every tree, without placing an restrictions on
 the individual tree. (\url{https://www.analyticsvidhya.com/blog/2015/06/tuning-random-forest-model/})
 Lastly, we gave our RandomForestClassifier a class\_weight of "balanced", wherein
 classes are automatically weighted inversely proportional to how frequently they
 appear in the data (\url{https://chrisalbon.com/machine_learning/trees_and_forests/handle_imbalanced_classes_in_random_forests/});
 this is particularly useful when dealing with imbalanced classes in Random Forest,
-which was characteristic of our data.
+which was characteristic of our data. \\
 
 \section{Results}
 
-For our neural net, when we run the test sets (boolTestIngredients, boolTestCuisine)
-on our model, we get an accuracy rate of ~93\%. Although somewhat high, we
+For our final implementations of our neural network and ensmeble model, we
+achieved accuracy rates of approximately 93\% and 99\%, respectively. Our explanations for
+the accuracy of our models is provided below. \\
+
+\textit{Neural Network}. For our final implementation of our neural net, we used the following parameters:
+the Adamax optimizer, the sparse\_categorical\_crossentropy loss function, and
+two hidden dense layers with the ReLU activation function, and an output layer
+using a softmax activation function. For our finalized neural net,
+when we run the test sets (boolTestIngredients, boolTestCuisine)
+on our model, we get an accuracy rate of approximately 93\%. Although somewhat high, we
 concluded that a 93\% accuracy rate ultimately made sense, because a lot of our
 model's inaccurate classifications were minor. For example, we noticed that
 our model classified a Vietnamese dish as Thai, but upon looking at the ingredients
@@ -184,26 +197,118 @@ leaves. Overall, because our inputs are ingredients and each country's cuisine u
 has a few distinct ingredients that our neural network can capitalize on,
 it makes sense that our neural network has a relatively high accuracy rate. \\
 
-For our random forest ensemble model, we scored a higher accuracy rate of ~99\%.
+In order to compare our final neural net against some other implementations, we
+varied the optimizer of our neural network with the number of dropout layers
+of our neural network architecture and compared the accuracy rates. We kept the
+loss function constant. Our results
+from these experiments are illustrated in Table 1 below:
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{ |c|c|c|c| }
+ \hline
+    & 1 Dropout Layer & 2 Dropout Layers \\
+ \hline
+ RMSProp & 91.25\% &  90.85\% \\
+ \hline
+ Adamax & 92.33\% & 91.67\% \\
+ \hline
+ SGD & 73.18\% & 73.74\%  \\
+ \hline
+\end{tabular}
+
+\caption{Optimizers and Dropout Layers}
+\end{table}
+
+From Table 1, we can see
+that Adamax performs the best against the other optimizers, RMSProp and SGD,
+with a 92.33\% accuracy. As mentioned above, we note that this is because
+Adamax has the benefit of RMSProp, an algorithm that does well on online and
+noisy problems, and also makes use of second moments of gradients. Thus, because
+RMSProp encompasses the benefit of Adamax, it follows that its accuracy would
+be higher. The reason why SGD had the lowest accuracy rate, at 73.18\%, is
+because it has a learning rate that is proportional to the inverse of the
+number of iterations. Thus, after a long run, it will take smaller steps and
+can easily get stuck in poor local minima. RMSProp is able to adjust the step
+size and gets iteratively updated with a running average that is on the
+same scale of the gradients (\url{http://www.erogol.com/comparison-sgd-vs-momentum-vs-rmsprop-vs-momentumrmsprop/}). \\
+
+Moreover, since ensemble learning is oftentimes slow and inefficient, we thought
+it would be a good idea to work with dropouts layers as a more efficient alternative, since dropout
+layers can often mimic the effects of ensemble learning methods. However,
+after varying the number of dropout layers from 1 layer to 2 layers, we noticed
+that it didn't have as significant of an impact on the overall accuracy rate of
+our neural network. \\
+
+\textit{Ensemble Model}. For our final implementation of our random forest
+ensemble model, we used 100 n\_estimators, "auto" max\_features, and a "balanced"
+class\_weight.
+With this model, we scored an accuracy rate of approximately 99\%.
 This was very high, but since we have an ensemble that is able to aggregate
-the strength of many smaller trees with a large n\_estimators of 500, and select
-features well with the specified parameters, this result is also not too surprising.
-We also have a large training set of ~30,000 dishes, and
+the strength of many smaller trees with 100 n\_estimators and select
+features well with the specified parameters, this result is also not too surprising. \\
 
-In this section you should show and analyze the results.  Measure the
-performance of your system, and if possible compare your performance
-to other implementations. Use tables and figures to illustrate the
-results.  If you can't fit all of the pictures that you'd like to show
-in the paper, you can make an accompanying web page and point the
-reader to it.
+In order to compare our final neural net against some other implementations, we
+varied the number of estimators and the type of max\_features and compared the accuracy rates.
+We kept the class\_weight constant. Our results
+from these experiments are illustrated in Table 2 below:
 
-Even if your project is not as successful as you'd hoped, you still
-need to show results.  This section is one of the key parts of any
-scientific paper.  Be sure to provide adequate information so that the
-reader can evaluate the outcomes of your experiments.
+\begin{table}[h!]
+\centering
+\begin{tabular}{ |c|c|c|c| }
+ \hline
+    & Auto & Log2 \\
+ \hline
+ 5 trees & 96.50\% &  97.06\% \\
+ \hline
+ 10 trees & 99.25\% & 99.42\% \\
+ \hline
+ 100 trees & 99.95\% & 99.97\% \\
+ \hline
+\end{tabular}
+
+\caption{Number of Estimators and Maximum Features}
+\end{table}
+
+From Table 2, we note that the accuracy of our ensemble model has a positive
+correlation with the number of estimators, which corroborates our final
+ensemble model's use of 100 estimators over 5 or 10 estimators. We also note that
+overall, log2 performs better as a range for the number of features to consider
+when finding the best split. We also note that as the number of estimators
+increase, the difference in accuracy rates between using auto and log2 begins to
+minimize. Thus, we decided to use 100 estimators, our decision to use either
+auto or log2 for our max\_features was relatively trivial. \\
 
 \section{Conclusions}
 
-This section should sum up what you did and what you found.
+After undergoing multiple experiments and an extensive parameter tuning process,
+we concluded that our neural network maximized accuracy with the following parameters:
+the Adamax optimizer, the sparse\_categorical\_crossentropy loss function. Additionally,
+our neural network architecture was optimized with two hidden dense layers using
+the ReLU activation functions with a dropout layer between the first and second
+hidden layers, and one output dense layer using the softmax activation function.
+Moreover, we concluded that our ensemble model maximized accuracy with the
+following parameters: 100 estimators, "auto" or "log2" max\_features, and a
+"balanced" class\_weight. \\
+
+The incredibly high accuracy rates of our neural network and ensemble model was
+a huge point of inquiry, but we concluded that the accuracy rates were likely
+a correct reflection of the strength of our model. We concluded that because
+there is so much data in the training set so that some dishes can reappear in
+a pretty similar combination in the test set, therefore increasing the likelihood
+that our models learn the correct classification. Overall, due to its ability to
+work with large datasets without loss of accuracy and by virtue of constructing
+a multitude of decision trees, we conclude that the Random Forest Algorithm is
+one of the best classification algorithms to accomplish the task of building a
+recipe classifier.\\
+
+\section{Citations}
+\url{https://www.kdnuggets.com/2016/10/artificial-intelligence-deep-learning-neural-networks-explained.html} \\
+\url{https://towardsdatascience.com/introduction-to-neural-networks-advantages-and-applications-96851bd1a207} \\
+\url{https://en.wikipedia.org/wiki/Softmax_function/} \\
+\url{https://machinelearningmastery.com/adam-optimization-algorithm-for-deep-learning/} \\
+\url{https://www.analyticsvidhya.com/blog/2015/06/tuning-random-forest-model/} \\
+\url{https://chrisalbon.com/machine_learning/trees_and_forests/handle_imbalanced_classes_in_random_forests/} \\
+\url{http://www.erogol.com/comparison-sgd-vs-momentum-vs-rmsprop-vs-momentumrmsprop/} \\
 
 \end{document}
